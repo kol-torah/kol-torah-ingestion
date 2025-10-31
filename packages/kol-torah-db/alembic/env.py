@@ -7,14 +7,23 @@ from alembic import context
 
 # Import the base and models
 import sys
+import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Add the parent directory to the path so we can import kol_torah_db
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from kol_torah_db.database import Base, DATABASE_URL
+# Load environment variables from .env file in the package root
+env_path = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
+
+from kol_torah_db.database import Base
 # Import all models here so they're registered with Base.metadata
 from kol_torah_db.models import Rabbi, Series
+
+# Get DATABASE_URL from environment
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
