@@ -1,0 +1,25 @@
+{
+  "folders": [
+    {
+      "path": "packages/kol-torah-db",
+      "name": "Database Package"
+    },
+    {
+      "path": "ingestion",
+      "name": "Ingestion Pipelines"
+    },
+    {
+      "path": "admin/backend",
+      "name": "Admin Backend"
+    },
+    {
+      "path": "admin/frontend",
+      "name": "Admin Frontend"
+    },
+    {
+      "path": ".",
+      "name": "Repository Root"
+    }
+  ],
+  "settings": {}
+}
