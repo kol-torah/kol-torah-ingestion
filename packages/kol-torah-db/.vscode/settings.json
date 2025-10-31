@@ -1,0 +1,3 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/packages/kol-torah-db/env/Scripts/python.exe"
+}
