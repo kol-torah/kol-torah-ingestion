@@ -3,6 +3,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from .routers import rabbis_router, series_router
+
 app = FastAPI(
     title="Kol Torah Admin API",
     description="API for managing Kol Torah database records",
@@ -17,6 +19,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include routers
+app.include_router(rabbis_router)
+app.include_router(series_router)
 
 
 @app.get("/")

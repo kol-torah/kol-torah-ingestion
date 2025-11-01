@@ -3,10 +3,10 @@
 -- Run this script as a PostgreSQL superuser
 
 -- Create ingestion role for data ingestion pipelines
-CREATE ROLE ingestion WITH LOGIN PASSWORD 'BFyT#ZP*q&8PkCCs';
+CREATE ROLE ingestion WITH LOGIN PASSWORD '*********';
 
 -- Create webapp role for the admin web application
-CREATE ROLE webapp WITH LOGIN PASSWORD 'LWR6#zSt&Ju*LEnU';
+CREATE ROLE webapp WITH LOGIN PASSWORD '*********';
 
 -- Grant connection privileges
 GRANT CONNECT ON DATABASE kol_torah TO ingestion;
