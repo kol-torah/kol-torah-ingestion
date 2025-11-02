@@ -32,6 +32,14 @@
       "justMyCode": false,
       "python": "${workspaceFolder:Admin Backend}/env/Scripts/python.exe",
       "cwd": "${workspaceFolder:Admin Backend}"
+    },
+    {
+      "name": "Admin Frontend: Edge",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder:Admin Frontend}",
+      "preLaunchTask": "pnpm: dev - admin/frontend"
     }
   ]
 }
