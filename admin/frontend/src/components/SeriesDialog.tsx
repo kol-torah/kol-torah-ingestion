@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -20,14 +20,44 @@ interface SeriesDialogProps {
 
 export default function SeriesDialog({ open, series, rabbiId, onClose, onSave }: SeriesDialogProps) {
   const [formData, setFormData] = useState<SeriesCreate>({
-    rabbi_id: series?.rabbi_id || rabbiId,
-    name_hebrew: series?.name_hebrew || '',
-    name_english: series?.name_english || '',
-    description_hebrew: series?.description_hebrew || '',
-    description_english: series?.description_english || '',
-    website_url: series?.website_url || '',
-    type: series?.type || '',
+    rabbi_id: rabbiId,
+    name_hebrew: '',
+    name_english: '',
+    slug: '',
+    description_hebrew: '',
+    description_english: '',
+    website_url: '',
+    type: '',
   });
+
+  // Update form data when series changes or dialog opens
+  useEffect(() => {
+    if (open) {
+      if (series) {
+        setFormData({
+          rabbi_id: series.rabbi_id,
+          name_hebrew: series.name_hebrew,
+          name_english: series.name_english,
+          slug: series.slug,
+          description_hebrew: series.description_hebrew || '',
+          description_english: series.description_english || '',
+          website_url: series.website_url || '',
+          type: series.type,
+        });
+      } else {
+        setFormData({
+          rabbi_id: rabbiId,
+          name_hebrew: '',
+          name_english: '',
+          slug: '',
+          description_hebrew: '',
+          description_english: '',
+          website_url: '',
+          type: '',
+        });
+      }
+    }
+  }, [open, series, rabbiId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,6 +90,14 @@ export default function SeriesDialog({ open, series, rabbiId, onClose, onSave }:
               onChange={handleChange('name_english')}
               required
               fullWidth
+            />
+            <TextField
+              label="Slug"
+              value={formData.slug}
+              onChange={handleChange('slug')}
+              required
+              fullWidth
+              helperText="URL-friendly identifier (e.g., parsha-bereshit)"
             />
             <TextField
               label="Type"

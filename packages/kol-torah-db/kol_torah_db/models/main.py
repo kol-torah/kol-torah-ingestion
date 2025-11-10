@@ -38,6 +38,7 @@ class Series(Base):
     rabbi_id = Column(Integer, ForeignKey("main.rabbis.id"), nullable=False, index=True)
     name_hebrew = Column(String(255), nullable=False)
     name_english = Column(String(255), nullable=False)
+    slug = Column(String(255), unique=True, nullable=False, index=True)
     description_hebrew = Column(Text, nullable=True)
     description_english = Column(Text, nullable=True)
     website_url = Column(String(500), nullable=True)
@@ -50,4 +51,4 @@ class Series(Base):
     rabbi = relationship("Rabbi", back_populates="series")
     
     def __repr__(self):
-        return f"<Series(id={self.id}, name_english='{self.name_english}', type='{self.type}')>"
+        return f"<Series(id={self.id}, name_english='{self.name_english}', slug='{self.slug}', type='{self.type}')>"

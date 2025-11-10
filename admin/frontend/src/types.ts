@@ -28,6 +28,7 @@ export interface Series {
   rabbi_id: number;
   name_hebrew: string;
   name_english: string;
+  slug: string;
   description_hebrew?: string;
   description_english?: string;
   website_url?: string;
@@ -40,6 +41,7 @@ export interface SeriesCreate {
   rabbi_id: number;
   name_hebrew: string;
   name_english: string;
+  slug: string;
   description_hebrew?: string;
   description_english?: string;
   website_url?: string;
@@ -50,6 +52,7 @@ export interface SeriesUpdate {
   rabbi_id?: number;
   name_hebrew?: string;
   name_english?: string;
+  slug?: string;
   description_hebrew?: string;
   description_english?: string;
   website_url?: string;

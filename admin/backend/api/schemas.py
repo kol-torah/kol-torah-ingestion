@@ -44,6 +44,7 @@ class SeriesBase(BaseModel):
     rabbi_id: int
     name_hebrew: str = Field(..., min_length=1, max_length=255)
     name_english: str = Field(..., min_length=1, max_length=255)
+    slug: str = Field(..., min_length=1, max_length=255)
     description_hebrew: Optional[str] = None
     description_english: Optional[str] = None
     website_url: Optional[str] = Field(None, max_length=500)
@@ -60,6 +61,7 @@ class SeriesUpdate(BaseModel):
     rabbi_id: Optional[int] = None
     name_hebrew: Optional[str] = Field(None, min_length=1, max_length=255)
     name_english: Optional[str] = Field(None, min_length=1, max_length=255)
+    slug: Optional[str] = Field(None, min_length=1, max_length=255)
     description_hebrew: Optional[str] = None
     description_english: Optional[str] = None
     website_url: Optional[str] = Field(None, max_length=500)
