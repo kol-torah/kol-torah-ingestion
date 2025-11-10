@@ -110,6 +110,49 @@ def fetch_halichot_olam(rabbi_slug: str, series_slug: str):
         raise click.Abort()
 
 
+@youtube.command("fetch-rabinovitch-sample")
+@click.option("--rabbi-slug", default="rabinovitch", help="Rabbi slug (default: rabinovitch)")
+@click.option("--series-slug", default="sample", help="Series slug (default: sample)")
+def fetch_rabinovitch_sample(rabbi_slug: str, series_slug: str):
+    """Fetch videos for Rabbi Rabinovitch Sample Lessons series."""
+    from pipelines.youtube.fetch_youtube_videos import YouTubeVideoFetcher
+    from pipelines.utils import get_db_session
+    from kol_torah_db.models import Rabbi, Series
+    
+    click.echo(f"Looking up series: rabbi='{rabbi_slug}', series='{series_slug}'")
+    
+    # Look up series ID from database
+    try:
+        with get_db_session() as session:
+            series = session.query(Series).join(Rabbi).filter(
+                Rabbi.slug == rabbi_slug,
+                Series.slug == series_slug
+            ).first()
+            
+            if not series:
+                click.echo(f"✗ Error: Series not found for rabbi '{rabbi_slug}' and series '{series_slug}'", err=True)
+                raise click.Abort()
+            
+            # Extract values while session is active
+            series_id: int = series.id  # type: ignore
+            series_name: str = series.name_english  # type: ignore
+            
+        click.echo(f"Found series: {series_name} (ID: {series_id})")
+    except Exception as e:
+        click.echo(f"✗ Database error: {e}", err=True)
+        raise click.Abort()
+    
+    click.echo(f"Fetching Rabbi Rabinovitch Sample Lessons videos")
+    
+    try:
+        fetcher = YouTubeVideoFetcher()
+        added_count = fetcher.fetch_rabinovitch_sample(series_id)
+        click.echo(f"✓ Successfully added {added_count} new videos")
+    except Exception as e:
+        click.echo(f"✗ Error: {e}", err=True)
+        raise click.Abort()
+
+
 @youtube.command("download-audio")
 @click.option("--limit", type=int, default=None, help="Maximum number of videos to process")
 def download_audio(limit: Optional[int]):

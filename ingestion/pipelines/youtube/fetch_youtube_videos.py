@@ -23,6 +23,8 @@ class YouTubeVideoFetcher:
     
     HALICHOT_OLAM_PLAYLIST_ID = "PLPPy6SF11zD8YIS1hqdscDdDPjWcICPPc"
     
+    RABINOVITCH_SAMPLE_PLAYLIST_ID = "PLTpvRg1R63788hG1UeONaVKx8d2D_nN7Y"
+    
     def __init__(self, api_key: Optional[str] = None):
         """Initialize YouTube API client.
         
@@ -286,6 +288,58 @@ class YouTubeVideoFetcher:
         video_details = self._get_video_details(new_video_ids)
         
         # Save to database (no duration filter for Halichot Olam)
+        added_count = 0
+        
+        with get_db_session() as session:
+            # Verify series exists
+            series = session.query(Series).filter(Series.id == series_id).first()
+            if not series:
+                raise ValueError(f"Series with id {series_id} not found")
+            
+            for video in video_details:
+                new_video = YoutubeVideo(
+                    video_id=video["video_id"],
+                    series_id=series_id,
+                    title=video["title"],
+                    description=video["description"],
+                    publish_date=video["publish_date"]
+                )
+                session.add(new_video)
+                added_count += 1
+                logger.info(
+                    f"Added video: {video['video_id']} - {video['title']} ({video['duration_minutes']:.1f} min)"
+                )
+        
+        logger.info(f"Processing complete: {added_count} videos added")
+        return added_count
+    
+    def fetch_rabinovitch_sample(self, series_id: int) -> int:
+        """Fetch videos for Rabbi Rabinovitch Sample Lessons series.
+        
+        Args:
+            series_id: Database ID for the Rabinovitch Sample series
+            
+        Returns:
+            Number of new videos added to database
+        """
+        logger.info("Starting fetch for Rabbi Rabinovitch Sample Lessons series")
+        
+        # Get all video IDs from the playlist
+        all_video_ids = self._get_playlist_videos(self.RABINOVITCH_SAMPLE_PLAYLIST_ID)
+        
+        logger.info(f"Total videos found in playlist: {len(all_video_ids)}")
+        
+        # Filter out videos already in database
+        new_video_ids = self._filter_existing_videos(all_video_ids)
+        
+        if not new_video_ids:
+            logger.info("No new videos to add")
+            return 0
+        
+        # Get detailed information for new videos
+        video_details = self._get_video_details(new_video_ids)
+        
+        # Save to database (no duration filter)
         added_count = 0
         
         with get_db_session() as session:
