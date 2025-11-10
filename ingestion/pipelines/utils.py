@@ -1,18 +1,15 @@
 """Common utilities for ingestion pipelines."""
 
-import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from contextlib import contextmanager
 from typing import Generator
+import config  # type: ignore
 
 
 def get_database_url() -> str:
-    """Get database URL from environment."""
-    database_url = os.getenv("DATABASE_URL")
-    if not database_url:
-        raise ValueError("DATABASE_URL environment variable is not set")
-    return database_url
+    """Get database URL from configuration."""
+    return config.get_database_url()
 
 
 def create_db_engine():

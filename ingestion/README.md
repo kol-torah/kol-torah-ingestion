@@ -19,10 +19,37 @@ poetry install
 2. Configure environment:
 ```bash
 cp .env.example .env
-# Edit .env with your credentials:
+# Edit .env with your secrets:
 # - DATABASE_URL: PostgreSQL connection string
 # - YOUTUBE_API_KEY: YouTube Data API v3 key
-# - AWS credentials and S3 bucket (for audio processing)
+# - AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY: AWS credentials for S3
+```
+
+3. (Optional) Customize non-secret configuration:
+   - Edit values in `.env` file (AWS_REGION, S3_BUCKET_NAME, LOG_LEVEL, etc.)
+   - Or override in `config.py` directly for static defaults
+
+## Configuration
+
+Configuration is managed through two layers:
+
+### Secrets (`.env` file - never commit!)
+- `DATABASE_URL` - PostgreSQL connection string
+- `YOUTUBE_API_KEY` - YouTube Data API key
+- `AWS_ACCESS_KEY_ID` - AWS access key
+- `AWS_SECRET_ACCESS_KEY` - AWS secret key
+
+### Non-Secret Config (`config.py` with `.env` overrides)
+- `AWS_REGION` - AWS region (default: us-east-1)
+- `S3_BUCKET_NAME` - S3 bucket name (default: kol-torah-media)
+- `LOG_LEVEL` - Logging level (default: INFO)
+- `BATCH_SIZE` - Processing batch size (default: 100)
+
+All code should import from `config.py`:
+```python
+import config
+api_key = config.get_youtube_api_key()  # Secret
+bucket = config.S3_BUCKET_NAME  # Non-secret
 ```
 
 ## Usage

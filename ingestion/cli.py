@@ -2,18 +2,11 @@
 
 import click
 import logging
-import os
-from pathlib import Path
-from dotenv import load_dotenv
-
-# Load environment variables
-env_path = Path(__file__).parent / ".env"
-load_dotenv(env_path)
+import config  # type: ignore
 
 # Configure logging
-log_level = os.getenv("LOG_LEVEL", "INFO")
 logging.basicConfig(
-    level=getattr(logging, log_level),
+    level=getattr(logging, config.LOG_LEVEL),
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 

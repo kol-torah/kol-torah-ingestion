@@ -1,6 +1,5 @@
 """Fetch YouTube videos for specific series and store them in the database."""
 
-import os
 import logging
 from datetime import datetime
 from typing import List, Dict, Any, Optional
@@ -8,6 +7,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from isodate import parse_duration
 
+import config  # type: ignore
 from kol_torah_db.models import YoutubeVideo, Series
 from pipelines.utils import get_db_session
 
@@ -27,11 +27,9 @@ class YouTubeVideoFetcher:
         """Initialize YouTube API client.
         
         Args:
-            api_key: YouTube Data API key. If not provided, will use YOUTUBE_API_KEY env var.
+            api_key: YouTube Data API key. If not provided, will use configuration.
         """
-        self.api_key = api_key or os.getenv("YOUTUBE_API_KEY")
-        if not self.api_key:
-            raise ValueError("YouTube API key is required. Set YOUTUBE_API_KEY environment variable.")
+        self.api_key = api_key or config.get_youtube_api_key()
         
         self.youtube = build("youtube", "v3", developerKey=self.api_key)
     
