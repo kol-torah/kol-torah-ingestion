@@ -7,7 +7,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from isodate import parse_duration
 
-import config  # type: ignore
+import config
 from kol_torah_db.models import YoutubeVideo, Series
 from pipelines.utils import get_db_session
 

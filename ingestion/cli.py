@@ -2,8 +2,8 @@
 
 import click
 import logging
-import config  # type: ignore
-
+from typing import Optional
+import config
 # Configure logging
 logging.basicConfig(
     level=getattr(logging, config.LOG_LEVEL),
@@ -21,44 +21,6 @@ def cli():
 def youtube():
     """YouTube-related ingestion commands."""
     pass
-
-
-@youtube.command("fetch-playlist")
-@click.option("--playlist-id", required=True, help="YouTube playlist ID")
-@click.option("--series-id", required=True, type=int, help="Database series ID")
-@click.option("--max-results", type=int, default=None, help="Maximum number of videos to fetch")
-def fetch_playlist(playlist_id: str, series_id: int, max_results: int):
-    """Fetch videos from a YouTube playlist and store in database."""
-    from pipelines.youtube.fetch_videos import fetch_and_store_playlist
-    
-    click.echo(f"Fetching videos from playlist: {playlist_id}")
-    click.echo(f"Target series ID: {series_id}")
-    
-    try:
-        added_count = fetch_and_store_playlist(playlist_id, series_id, max_results)
-        click.echo(f"✓ Successfully added {added_count} new videos")
-    except Exception as e:
-        click.echo(f"✗ Error: {e}", err=True)
-        raise click.Abort()
-
-
-@youtube.command("fetch-channel")
-@click.option("--channel-id", required=True, help="YouTube channel ID")
-@click.option("--series-id", required=True, type=int, help="Database series ID")
-@click.option("--max-results", type=int, default=None, help="Maximum number of videos to fetch")
-def fetch_channel(channel_id: str, series_id: int, max_results: int):
-    """Fetch videos from a YouTube channel and store in database."""
-    from pipelines.youtube.fetch_videos import fetch_and_store_channel
-    
-    click.echo(f"Fetching videos from channel: {channel_id}")
-    click.echo(f"Target series ID: {series_id}")
-    
-    try:
-        added_count = fetch_and_store_channel(channel_id, series_id, max_results)
-        click.echo(f"✓ Successfully added {added_count} new videos")
-    except Exception as e:
-        click.echo(f"✗ Error: {e}", err=True)
-        raise click.Abort()
 
 
 @youtube.command("fetch-butbul-daily-halacha")
@@ -143,6 +105,33 @@ def fetch_halichot_olam(rabbi_slug: str, series_slug: str):
         fetcher = YouTubeVideoFetcher()
         added_count = fetcher.fetch_halichot_olam(series_id)
         click.echo(f"✓ Successfully added {added_count} new videos")
+    except Exception as e:
+        click.echo(f"✗ Error: {e}", err=True)
+        raise click.Abort()
+
+
+@youtube.command("download-audio")
+@click.option("--limit", type=int, default=None, help="Maximum number of videos to process")
+def download_audio(limit: Optional[int]):
+    """Download audio from all YouTube videos that need processing and upload to S3."""
+    from pipelines.youtube.download_audio import YouTubeAudioDownloader
+    
+    click.echo("Starting audio download and S3 upload for all unprocessed videos...")
+    if limit:
+        click.echo(f"Processing up to {limit} videos")
+    
+    try:
+        downloader = YouTubeAudioDownloader()
+        stats = downloader.process_all_videos(limit)
+        
+        click.echo(f"\n{'='*60}")
+        click.echo(f"Processing Complete!")
+        click.echo(f"{'='*60}")
+        click.echo(f"Total videos:     {stats['total']}")
+        click.echo(f"✓ Processed:      {stats['processed']}")
+        click.echo(f"○ Skipped:        {stats['skipped']}")
+        click.echo(f"✗ Failed:         {stats['failed']}")
+        
     except Exception as e:
         click.echo(f"✗ Error: {e}", err=True)
         raise click.Abort()
