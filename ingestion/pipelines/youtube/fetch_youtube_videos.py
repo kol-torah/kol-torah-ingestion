@@ -140,7 +140,11 @@ class YouTubeVideoFetcher:
                     
                     # Parse duration
                     duration = parse_duration(content_details["duration"])
-                    duration_minutes = duration.total_seconds() / 60
+                    duration_seconds = int(duration.total_seconds())
+                    duration_minutes = duration_seconds / 60
+                    
+                    # Construct video URL
+                    video_url = f"https://www.youtube.com/watch?v={item['id']}"
                     
                     videos.append({
                         "video_id": item["id"],
@@ -150,6 +154,8 @@ class YouTubeVideoFetcher:
                             snippet["publishedAt"],
                             "%Y-%m-%dT%H:%M:%SZ"
                         ).date(),
+                        "url": video_url,
+                        "duration": duration_seconds,
                         "duration_minutes": duration_minutes
                     })
                 
@@ -247,7 +253,9 @@ class YouTubeVideoFetcher:
                     series_id=series_id,
                     title=video["title"],
                     description=video["description"],
-                    publish_date=video["publish_date"]
+                    publish_date=video["publish_date"],
+                    url=video["url"],
+                    duration=video["duration"]
                 )
                 session.add(new_video)
                 added_count += 1
@@ -302,7 +310,9 @@ class YouTubeVideoFetcher:
                     series_id=series_id,
                     title=video["title"],
                     description=video["description"],
-                    publish_date=video["publish_date"]
+                    publish_date=video["publish_date"],
+                    url=video["url"],
+                    duration=video["duration"]
                 )
                 session.add(new_video)
                 added_count += 1
@@ -354,7 +364,9 @@ class YouTubeVideoFetcher:
                     series_id=series_id,
                     title=video["title"],
                     description=video["description"],
-                    publish_date=video["publish_date"]
+                    publish_date=video["publish_date"],
+                    url=video["url"],
+                    duration=video["duration"]
                 )
                 session.add(new_video)
                 added_count += 1
