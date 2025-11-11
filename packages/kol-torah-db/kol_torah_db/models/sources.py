@@ -18,6 +18,8 @@ class YoutubeVideo(Base):
     title = Column(String(500), nullable=False)
     description = Column(Text, nullable=True)
     publish_date = Column(Date, nullable=False)
+    url = Column(String(500), nullable=True)
+    duration = Column(Integer, nullable=True)
     bucket = Column(String(255), nullable=True)
     path = Column(String(1000), nullable=True)
     
