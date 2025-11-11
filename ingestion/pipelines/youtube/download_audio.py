@@ -262,27 +262,23 @@ class YouTubeAudioDownloader:
         for idx, (vid_id, video_id, title, publish_date, series_slug, rabbi_slug) in enumerate(video_data, 1):
             logger.info(f"\n[{idx}/{total}] Processing video {video_id} ({rabbi_slug}/{series_slug})")
             
-            # Refresh database connection every 20 videos to avoid timeout
-            if idx % 20 == 1 or idx == 1:
-                logger.info("Refreshing database connection...")
-            
-            # Reload video from DB for processing
-            with get_db_session() as session:
-                video = session.query(YoutubeVideo).filter(YoutubeVideo.id == vid_id).first()
-                if not video:
-                    logger.error(f"Video {video_id} not found in database")
-                    failed += 1
-                    continue
-                
-                try:
+            try:
+                # Open fresh connection for each video to avoid Neon timeout
+                with get_db_session() as session:
+                    video = session.query(YoutubeVideo).filter(YoutubeVideo.id == vid_id).first()
+                    if not video:
+                        logger.error(f"Video {video_id} not found in database")
+                        failed += 1
+                        continue
+                    
                     result = self.process_video(video, rabbi_slug, series_slug)
                     if result:
                         processed += 1
                     else:
                         skipped += 1
-                except Exception as e:
-                    logger.error(f"Failed to process video {video_id}: {e}")
-                    failed += 1
+            except Exception as e:
+                logger.error(f"Failed to process video {video_id}: {e}")
+                failed += 1
         
         stats = {
             "total": total,
