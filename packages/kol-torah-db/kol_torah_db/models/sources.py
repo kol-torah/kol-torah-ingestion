@@ -22,6 +22,8 @@ class YoutubeVideo(Base):
     duration = Column(Integer, nullable=False)
     bucket = Column(String(255), nullable=True)
     path = Column(String(1000), nullable=True)
+    transcript_bucket = Column(String(255), nullable=True)
+    transcript_path = Column(String(1000), nullable=True)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
