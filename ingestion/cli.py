@@ -180,5 +180,40 @@ def download_audio(limit: Optional[int]):
         raise click.Abort()
 
 
+@cli.group()
+def transcript():
+    """Transcript-related ingestion commands."""
+    pass
+
+
+@transcript.command("upload-existing")
+@click.argument("transcript_dir", type=click.Path(exists=True, file_okay=False, dir_okay=True))
+def upload_existing_transcripts(transcript_dir: str):
+    """Upload existing transcript files from a directory to S3.
+    
+    Expects transcript files named <video-id>.json in the specified directory.
+    Will upload to S3 and update the database for videos that don't already have transcripts.
+    """
+    from pipelines.transcript.upload_existing_transcripts import TranscriptUploader
+    
+    click.echo(f"Uploading transcripts from: {transcript_dir}")
+    
+    try:
+        uploader = TranscriptUploader()
+        stats = uploader.upload_from_directory(transcript_dir)
+        
+        click.echo(f"\n{'='*60}")
+        click.echo(f"Processing Complete!")
+        click.echo(f"{'='*60}")
+        click.echo(f"Total files:      {stats['total']}")
+        click.echo(f"✓ Uploaded:       {stats['uploaded']}")
+        click.echo(f"○ Skipped:        {stats['skipped']}")
+        click.echo(f"✗ Failed:         {stats['failed']}")
+        
+    except Exception as e:
+        click.echo(f"✗ Error: {e}", err=True)
+        raise click.Abort()
+
+
 if __name__ == "__main__":
     cli()
