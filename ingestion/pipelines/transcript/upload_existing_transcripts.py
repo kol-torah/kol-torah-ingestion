@@ -116,84 +116,6 @@ class TranscriptUploader:
         print()  # New line after upload completes
         logger.info(f"Successfully uploaded to S3")
     
-    def upload_transcript(
-        self,
-        video_id: str,
-        transcript_file: Path
-    ) -> bool:
-        """Upload transcript for a single video.
-        
-        Args:
-            video_id: YouTube video ID
-            transcript_file: Path to transcript JSON file
-            
-        Returns:
-            True if successful, False if skipped or failed
-        """
-        # Validate transcript file
-        if not self._validate_transcript_file(transcript_file):
-            logger.error(f"Invalid transcript file for video {video_id}")
-            return False
-        
-        # Get video from database
-        with get_db_session() as session:
-            video = session.query(YoutubeVideo).filter(
-                YoutubeVideo.video_id == video_id
-            ).first()
-            
-            if not video:
-                logger.warning(f"Video {video_id} not found in database, skipping")
-                return False
-            
-            # Check if transcript already exists in database
-            if video.transcript_bucket and video.transcript_path:
-                logger.info(f"Video {video_id} already has transcript in database, skipping")
-                return False
-            
-            # Check if video has audio path (needed to determine transcript path)
-            if not video.path:
-                logger.warning(f"Video {video_id} has no audio path in database, skipping")
-                return False
-            
-            audio_path = video.path
-            video_db_id = video.id
-        
-        # Generate transcript S3 path based on audio path
-        transcript_s3_path = self._generate_transcript_s3_path(audio_path)
-        
-        # Check if already uploaded to S3
-        if self._check_s3_exists(transcript_s3_path):
-            logger.warning(f"Transcript exists in S3 but not in DB, updating DB record")
-            with get_db_session() as session:
-                video = session.query(YoutubeVideo).filter(
-                    YoutubeVideo.id == video_db_id
-                ).first()
-                if video:
-                    video.transcript_bucket = self.s3_bucket
-                    video.transcript_path = transcript_s3_path
-            return False
-        
-        # Upload to S3
-        try:
-            logger.info(f"Processing transcript for video: {video_id}")
-            self._upload_to_s3(transcript_file, transcript_s3_path)
-            
-            # Update database
-            with get_db_session() as session:
-                video = session.query(YoutubeVideo).filter(
-                    YoutubeVideo.id == video_db_id
-                ).first()
-                if video:
-                    video.transcript_bucket = self.s3_bucket
-                    video.transcript_path = transcript_s3_path
-                    logger.info(f"Updated database record for video {video_id}")
-            
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error uploading transcript for video {video_id}: {e}")
-            raise
-    
     def upload_from_directory(self, transcript_dir: str) -> Dict[str, int]:
         """Upload all transcripts from a directory.
         
@@ -219,6 +141,21 @@ class TranscriptUploader:
         if total == 0:
             return {"total": 0, "uploaded": 0, "skipped": 0, "failed": 0}
         
+        # Load all videos without transcripts from database (single query)
+        logger.info("Loading videos without transcripts from database...")
+        with get_db_session() as session:
+            videos = session.query(YoutubeVideo).filter(
+                YoutubeVideo.transcript_path.is_(None)
+            ).all()
+            
+            # Create a mapping of video_id to (db_id, audio_path)
+            video_map = {
+                str(v.video_id): (int(v.id), str(v.path) if v.path else None)  # type: ignore
+                for v in videos
+            }
+        
+        logger.info(f"Found {len(video_map)} videos in database without transcripts")
+        
         uploaded = 0
         skipped = 0
         failed = 0
@@ -229,12 +166,46 @@ class TranscriptUploader:
             
             logger.info(f"\n[{idx}/{total}] Processing transcript for video {video_id}")
             
+            # Check if video exists in our map
+            if video_id not in video_map:
+                logger.info(f"Video {video_id} not found in database or already has transcript, skipping")
+                skipped += 1
+                continue
+            
+            video_db_id, audio_path = video_map[video_id]
+            
+            # Check if video has audio path
+            if not audio_path:
+                logger.warning(f"Video {video_id} has no audio path in database, skipping")
+                skipped += 1
+                continue
+            
+            # Validate transcript file
+            if not self._validate_transcript_file(transcript_file):
+                logger.error(f"Invalid transcript file for video {video_id}")
+                failed += 1
+                continue
+            
+            # Generate transcript S3 path based on audio path
+            transcript_s3_path = self._generate_transcript_s3_path(audio_path)
+            
+            # Upload to S3
             try:
-                result = self.upload_transcript(video_id, transcript_file)
-                if result:
-                    uploaded += 1
-                else:
-                    skipped += 1
+                logger.info(f"Processing transcript for video: {video_id}")
+                self._upload_to_s3(transcript_file, transcript_s3_path)
+                
+                # Update database
+                with get_db_session() as session:
+                    video = session.query(YoutubeVideo).filter(
+                        YoutubeVideo.id == video_db_id
+                    ).first()
+                    if video:
+                        video.transcript_bucket = self.s3_bucket  # type: ignore
+                        video.transcript_path = transcript_s3_path  # type: ignore
+                        logger.info(f"Updated database record for video {video_id}")
+                
+                uploaded += 1
+                
             except Exception as e:
                 logger.error(f"Failed to upload transcript for video {video_id}: {e}")
                 failed += 1
